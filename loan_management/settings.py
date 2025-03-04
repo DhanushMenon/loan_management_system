@@ -22,7 +22,7 @@ SECRET_KEY = os.getenv("SECRET_KEY", "django-insecure-5s+m#$)z_9-)erhlpj05fem60*
 
 DEBUG = os.getenv("DEBUG", "True") == "True"
 
-ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
+ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "loan-management-system-h1i5.onrender.com,localhost,127.0.0.1").split(",")
 
 
 INSTALLED_APPS = [
