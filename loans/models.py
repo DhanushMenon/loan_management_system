@@ -8,7 +8,7 @@ from django.contrib.auth.models import AbstractUser
 from django.conf import settings
 
 
-# Custom User Model
+# Custom Users
 class User(AbstractUser):
     ROLE_CHOICES = (
         ("admin", "Admin"),
@@ -22,7 +22,7 @@ class User(AbstractUser):
         return self.username
 
 
-# Loan Model
+
 class Loan(models.Model):
     STATUS_CHOICES = (
         ("ACTIVE", "Active"),
@@ -72,7 +72,7 @@ class Loan(models.Model):
             self.calculate_loan()
         super().save(*args, **kwargs)
 
-        # Generate payment schedule only for new loans
+        #payment schedule for newloan
         if is_new:
             self.create_payment_schedule()
 
@@ -115,7 +115,6 @@ class Loan(models.Model):
         return f"Loan {self.id} - {self.user.username} - ₹{self.amount}"
 
 
-# OTP Model
 class OTP(models.Model):
     email = models.EmailField()
     otp = models.CharField(max_length=6)
@@ -129,7 +128,7 @@ class OTP(models.Model):
         return f"OTP for {self.email} - {'Verified' if self.is_verified else 'Pending'}"
 
 
-# Payment Model
+
 class Payment(models.Model):
     PAYMENT_STATUS = (
         ("PENDING", "Pending"),
@@ -158,7 +157,7 @@ class Payment(models.Model):
         self.paid_date = paid_date or timezone.now().date()
         self.save()
 
-        # Update loan status after payment
+        #updation after payment
         self.loan.update_loan_status()
 
     def check_if_overdue(self):

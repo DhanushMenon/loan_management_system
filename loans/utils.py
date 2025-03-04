@@ -22,11 +22,9 @@ def send_otp_email(email, otp):
     recipient_list = [email]
     
     try:
-        # Test DNS resolution
         print(f"Attempting to resolve {settings.EMAIL_HOST}")
         socket.gethostbyname(settings.EMAIL_HOST)
-        
-        # Print email settings for debugging
+
         print(f"Using email settings:")
         print(f"HOST: {settings.EMAIL_HOST}")
         print(f"PORT: {settings.EMAIL_PORT}")

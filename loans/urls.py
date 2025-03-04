@@ -9,11 +9,11 @@ from loans.views import (
     LoanViewSet,
 )
 
-# Create a router and register our viewsets with it.
+#Creation of router and viewset
 router = DefaultRouter()
 router.register(r'loans', LoanViewSet, basename='loan')
 
-# Define URL patterns
+
 urlpatterns = [
     path('auth/register/', RegisterUserView.as_view(), name='register'),
     path('auth/login/', LoginView.as_view(), name='login'),

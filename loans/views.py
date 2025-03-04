@@ -45,7 +45,7 @@ class RegisterUserView(generics.CreateAPIView):
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def verify_email(request):
-    """Verify Email with OTP"""
+    #verification of otp
     serializer = OTPVerificationSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
 
@@ -110,23 +110,22 @@ class LoanViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         if not self.request.user.is_authenticated:
-            return Loan.objects.none()  # Return empty for unauthenticated users
+            return Loan.objects.none()
 
-        # 🔹 Ensure `role` is retrieved correctly from the database
+        #proper role authentication
         user = User.objects.get(id=self.request.user.id)
 
         if user.role == "admin":
-            return Loan.objects.all()  # Admin can see all loans
-        return Loan.objects.filter(user=user)  # Users see only their loans
+            return Loan.objects.all()
+        return Loan.objects.filter(user=user)
 
     def perform_create(self, serializer):
-        """Assign the logged-in user to the loan."""
         serializer.save(user=self.request.user)
 
     def destroy(self, request, *args, **kwargs):
         loan = self.get_object()
 
-        # 🔹 Ensure only admins can delete loans
+        #admins can delete loans
         if not request.user.is_authenticated or request.user.role != "admin":
             return Response({"detail": "Only admins can delete loans."}, status=status.HTTP_403_FORBIDDEN)
 
@@ -137,24 +136,21 @@ class LoanViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'])
     def foreclose(self, request, pk=None):
-        """ Allows users to foreclose (pay off) their loan early """
         loan = self.get_object()
 
         if loan.status == "CLOSED":
             return Response({"message": "Loan already closed"}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Convert everything to Decimal to avoid float-Decimal conflict
         total_paid = Decimal(loan.get_total_paid())  # Ensure Decimal
         remaining_principal = Decimal(loan.amount) - total_paid  # Ensure Decimal
         remaining_interest = Decimal(loan.get_amount_remaining()) - remaining_principal  # Ensure Decimal
         foreclosure_discount = remaining_interest * Decimal("0.05")  # Ensure Decimal
         final_settlement = remaining_principal + (remaining_interest - foreclosure_discount)  # Ensure Decimal
 
-        # Mark loan as closed
         loan.status = "CLOSED"
         loan.save()
 
-        # Create final payment entry
+        #final payment entry
         Payment.objects.create(
             loan=loan,
             installment_number=loan.payments.count() + 1,
@@ -176,7 +172,7 @@ class LoanViewSet(viewsets.ModelViewSet):
     def make_payment(self, request, pk=None):
         loan = self.get_object()
 
-        # Prevent payments on closed loans
+        #No payments on closed loans
         if loan.status == "CLOSED":
             return Response({"message": "This loan is already closed. No further payments allowed."},
                             status=status.HTTP_400_BAD_REQUEST)
@@ -202,8 +198,8 @@ class LoanViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['get'])
     def details(self, request, pk=None):
         loan = self.get_object()
-        payment_schedule = loan.get_payment_schedule()  # This returns a queryset
-        serialized_payments = PaymentSerializer(payment_schedule, many=True).data  # Serialize the queryset
+        payment_schedule = loan.get_payment_schedule()
+        serialized_payments = PaymentSerializer(payment_schedule, many=True).data
 
         return Response({
             "loan_id": f"LOAN{loan.id}",
@@ -219,5 +215,5 @@ class LoanViewSet(viewsets.ModelViewSet):
                 "amount_remaining": float(loan.get_amount_remaining()),
                 "next_payment_date": loan.get_next_payment().due_date if loan.get_next_payment() else None,
             },
-            "payment_schedule": serialized_payments,  # Use serialized data
+            "payment_schedule": serialized_payments,
         })
